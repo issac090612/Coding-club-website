@@ -181,7 +181,7 @@
   function updateMemberLayout() {
     if (!membersSection || !memberList) return;
     var count = memberList.children.length;
-    var extra = count > 4 ? count * 110 : 0;
+    var extra = count > 2 ? count * 110 : 0;
     membersSection.style.setProperty('--members-scroll', extra + 'px');
   }
 
@@ -193,7 +193,7 @@
     var listRect = memberList.getBoundingClientRect();
     if (listRect.height <= 0) return;
 
-    var circular = count > 4;
+    var circular = count > 2;
     var position = 0;
     if (circular && membersSection) {
       var sectionTop = membersSection.getBoundingClientRect().top + window.scrollY;
