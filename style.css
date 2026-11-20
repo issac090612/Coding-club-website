@@ -200,7 +200,8 @@ h1, h2, h3 { letter-spacing: -0.02em; line-height: 1.1; }
 
 /* ---------- Full-screen snap sections ----------
    Sections pin in place while the next one slides up over them, so the
-   current section's content stays still during the change. */
+   current section's content stays still during the change. Every section
+   needs an opaque background so the pinned section below cannot show through. */
 .screen,
 .screen-scroll {
   min-height: 100vh;
@@ -209,17 +210,14 @@ h1, h2, h3 { letter-spacing: -0.02em; line-height: 1.1; }
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   text-align: center;
   padding: 6rem 22px;
+  background: var(--bg);
 }
 
 .screen { position: sticky; top: 0; z-index: 1; }
 .screen-scroll { position: relative; z-index: 1; }
-
-/* Auto margins center each section's content; they collapse to zero when a
-   section's content is taller than the viewport, so the top stays reachable. */
-.screen > :first-child, .screen-scroll > :first-child { margin-top: auto; }
-.screen > :last-child, .screen-scroll > :last-child { margin-bottom: auto; }
 
 .screen h2, .screen-scroll h2 { margin: 0 0 1rem; }
 
@@ -572,13 +570,39 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--link); outline-
 
 .back-link:hover { text-decoration: underline; }
 
-/* ---------- Members (smartwatch-style list) ---------- */
+/* ---------- Members (smartwatch-style list) ----------
+   The section stays one viewport tall. Long lists scroll inside the section;
+   native scroll chaining returns to the page after the final member. */
+#members {
+  height: 100vh;
+  height: 100svh;
+}
+
+#members > .mono-label,
+#members > h2,
+#members > .empty { flex: none; }
+
 .member-list {
   width: min(26rem, 100%);
   display: flex;
+  flex: 0 1 auto;
   flex-direction: column;
   gap: 0.9rem;
+  min-height: 0;
   margin: 1rem 0 0;
+  padding: 0.25rem 0.5rem;
+  overflow-y: auto;
+  overscroll-behavior-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted) transparent;
+}
+
+.member-list:empty { display: none; }
+
+.member-list:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 4px;
+  border-radius: 18px;
 }
 
 .member-item {

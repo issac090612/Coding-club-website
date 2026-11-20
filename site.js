@@ -180,13 +180,18 @@
     var els = memberList.querySelectorAll('.member-item');
     if (!els.length) return;
     var vh = window.innerHeight;
-    var mid = vh / 2;
+    var listRect = memberList.getBoundingClientRect();
+    var visibleTop = Math.max(0, listRect.top);
+    var visibleBottom = Math.min(vh, listRect.bottom);
+    if (visibleBottom <= visibleTop) return;
+    var mid = (visibleTop + visibleBottom) / 2;
+    var range = Math.max((visibleBottom - visibleTop) / 2, 1);
     for (var i = 0; i < els.length; i++) {
       var el = els[i];
       var r = el.getBoundingClientRect();
-      if (r.bottom < -80 || r.top > vh + 80) continue;
+      if (r.bottom < visibleTop - 80 || r.top > visibleBottom + 80) continue;
       var center = (r.top + r.bottom) / 2;
-      var t = Math.min(Math.abs(center - mid) / (vh / 2), 1);
+      var t = Math.min(Math.abs(center - mid) / range, 1);
       var sx = 1 - 0.45 * t;
       var sy = 1 - 0.15 * t;
       var op = 1 - 0.55 * t;
@@ -205,6 +210,7 @@
   }
 
   if (memberList) {
+    memberList.addEventListener('scroll', scheduleMemberEffect, { passive: true });
     window.addEventListener('scroll', scheduleMemberEffect, { passive: true });
     window.addEventListener('resize', scheduleMemberEffect, { passive: true });
   }
