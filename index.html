@@ -25,7 +25,9 @@
     <div class="nav-inner">
       <a class="logo" href="index.html">&lt;/&gt; Coding Club</a>
       <div class="nav-links">
+        <a href="#">Home</a>
         <a href="#showcase">Showcase</a>
+        <a href="#members">Members</a>
         <a href="#meetings">Meetings</a>
         <a href="submit.html">Submit</a>
         <a href="register.html" class="btn btn-primary">Register</a>
@@ -44,13 +46,22 @@
 
   <main>
     <section class="screen hero">
-      <p class="eyebrow reveal">The school Coding Club</p>
+      <p class="eyebrow reveal">Coding Club</p>
       <h1 class="reveal rd1">Make things. Together.</h1>
       <p class="sub reveal rd2">We work on projects together — and share the things each of us make.</p>
       <div class="hero-ctas reveal rd3">
         <a href="register.html" class="btn btn-primary btn-hero">Register</a>
         <a href="submit.html" class="cta-link">Submit a showcase<span class="chev" aria-hidden="true"> ›</span></a>
       </div>
+      <div class="terminal reveal rd3" id="terminal">
+        <div class="term-out" id="term-out" role="log" aria-live="polite"></div>
+        <div class="term-row">
+          <span class="term-prompt" aria-hidden="true">$</span>
+          <label for="term-input" class="visually-hidden">Type a command</label>
+          <input id="term-input" class="term-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder='type "help" for commands'>
+        </div>
+      </div>
+      <p class="term-hint reveal rd3">Try: <button type="button" class="term-example">register</button> · <button type="button" class="term-example">submit showcase</button> · <button type="button" class="term-example">help</button></p>
     </section>
 
     <section class="screen screen-alt">
@@ -73,10 +84,7 @@
 
     <section id="showcase" class="screen">
       <p class="mono-label reveal">// showcase</p>
-      <div class="section-head reveal rd1">
-        <h2>Showcase.</h2>
-        <a href="submit.html" class="cta-link">Submit yours<span class="chev" aria-hidden="true"> ›</span></a>
-      </div>
+      <h2 class="reveal rd1">Showcase <a href="submit.html" class="inline-link">· submit yours</a></h2>
       <div id="showcase-grid" class="showcase-grid"></div>
       <div id="showcase-empty" class="empty reveal rd2">
         <h3>Nothing here yet.</h3>
@@ -85,7 +93,18 @@
       </div>
     </section>
 
-    <section id="meetings" class="screen screen-alt">
+    <section id="members" class="screen-scroll screen-alt">
+      <p class="mono-label reveal">// members</p>
+      <h2 class="reveal rd1">Current members.</h2>
+      <div id="member-list" class="member-list"></div>
+      <div id="member-empty" class="empty reveal rd2">
+        <h3>No members yet.</h3>
+        <p>Register and you'll appear here.</p>
+        <a href="register.html" class="cta-link">Register to be the first<span class="chev" aria-hidden="true"> ›</span></a>
+      </div>
+    </section>
+
+    <section id="meetings" class="screen">
       <p class="mono-label reveal">// meetings</p>
       <h2 class="reveal rd1">We meet every Saturday.</h2>
       <p class="rule reveal rd2">7:30–8:00 AM · China Standard Time (UTC+8)</p>

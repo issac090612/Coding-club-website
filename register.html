@@ -25,7 +25,9 @@
     <div class="nav-inner">
       <a class="logo" href="index.html">&lt;/&gt; Coding Club</a>
       <div class="nav-links">
+        <a href="index.html">Home</a>
         <a href="index.html#showcase">Showcase</a>
+        <a href="index.html#members">Members</a>
         <a href="index.html#meetings">Meetings</a>
         <a href="submit.html">Submit</a>
         <a href="register.html" class="btn btn-primary">Register</a>
@@ -43,7 +45,8 @@
   </nav>
 
   <main class="auth-wrap container">
-    <h1 class="reveal">Join the Coding Club.</h1>
+    <a href="index.html" class="back-link reveal">‹ Back</a>
+    <h1 class="reveal rd1">Join the Coding Club.</h1>
     <p class="page-sub reveal rd1">Register below — and come to our next Saturday meeting.</p>
 
     <form id="register-form" class="form-card reveal rd2" novalidate>
@@ -70,7 +73,7 @@
       <p id="reg-status" class="status" role="status" aria-live="polite"></p>
       <button type="submit" class="btn btn-primary btn-block">Register</button>
 
-      <p class="form-note">This form doesn't send data anywhere yet — connect it to a form backend once the site is hosted.</p>
+      <p class="form-note">Registrations are saved in your browser and appear in the members section on the home page for this device. To collect registrations from everyone, connect a form backend once the site is hosted.</p>
     </form>
   </main>
 
@@ -87,6 +90,7 @@
       var status = document.getElementById('reg-status');
       var name = document.getElementById('reg-name');
       var email = document.getElementById('reg-email');
+      var make = document.getElementById('reg-msg');
       var consent = document.getElementById('reg-consent');
       if (!name.value.trim() || !consent.checked) {
         status.textContent = 'Please fill in the required fields.';
@@ -98,7 +102,19 @@
         status.className = 'status error';
         return;
       }
-      status.textContent = 'Thanks for registering. See you Saturday.';
+      var members = [];
+      try {
+        var raw = JSON.parse(localStorage.getItem('members'));
+        if (Array.isArray(raw)) members = raw;
+      } catch (err) {}
+      members.push({
+        name: name.value.trim(),
+        email: email.value.trim(),
+        make: make.value.trim(),
+        date: new Date().toISOString()
+      });
+      try { localStorage.setItem('members', JSON.stringify(members)); } catch (err) {}
+      status.textContent = 'Thanks for registering. See you Saturday — you are now in the members section on the home page.';
       status.className = 'status success';
       this.reset();
     });

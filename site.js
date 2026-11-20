@@ -1,6 +1,7 @@
-/* Coding Club — shared behavior: footer year, meeting time rendered in the
-   visitor's device time zone, and the showcase saved in the browser's
-   local storage (this static site has no server). */
+/* Coding Club — shared behavior: footer year, meeting time in the visitor's
+   device time zone, the showcase and members lists (saved in the browser's
+   local storage — this static site has no server), the home-page command
+   terminal, and scroll-reveal animations. */
 
 (function () {
   'use strict';
@@ -112,6 +113,104 @@
     });
   }
 
+  /* ---------- Members (local storage) ---------- */
+  var MEMBERS_KEY = 'members';
+
+  function readMembers() {
+    try {
+      var raw = JSON.parse(localStorage.getItem(MEMBERS_KEY));
+      return Array.isArray(raw) ? raw : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function writeMembers(list) {
+    try {
+      localStorage.setItem(MEMBERS_KEY, JSON.stringify(list));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  var memberList = document.getElementById('member-list');
+
+  function renderMembers() {
+    if (!memberList) return;
+    var members = readMembers();
+    memberList.innerHTML = '';
+    var memberEmpty = document.getElementById('member-empty');
+    if (memberEmpty) memberEmpty.hidden = members.length > 0;
+
+    var dateFmtM = null;
+    try {
+      dateFmtM = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch (e) {}
+
+    members.forEach(function (m) {
+      var item = document.createElement('div');
+      item.className = 'member-item';
+
+      var name = document.createElement('span');
+      name.className = 'member-name';
+      name.textContent = m.name || 'member';
+      item.appendChild(name);
+
+      var when = document.createElement('span');
+      when.className = 'member-date';
+      var d = m.date ? new Date(m.date) : null;
+      when.textContent = (d && !isNaN(d.getTime()) && dateFmtM) ? 'joined ' + dateFmtM.format(d) : '';
+      item.appendChild(when);
+
+      memberList.appendChild(item);
+    });
+
+    updateMemberEffect();
+  }
+
+  /* ---------- Smartwatch-style member list ----------
+     Like an app list on a round smartwatch: rows are thin near the top and
+     bottom of the viewport and reach full size at the center. Recomputed on
+     scroll/resize via requestAnimationFrame. */
+  var memberEffectPending = false;
+
+  function updateMemberEffect() {
+    if (!memberList) return;
+    var els = memberList.querySelectorAll('.member-item');
+    if (!els.length) return;
+    var vh = window.innerHeight;
+    var mid = vh / 2;
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      var r = el.getBoundingClientRect();
+      if (r.bottom < -80 || r.top > vh + 80) continue;
+      var center = (r.top + r.bottom) / 2;
+      var t = Math.min(Math.abs(center - mid) / (vh / 2), 1);
+      var sx = 1 - 0.45 * t;
+      var sy = 1 - 0.15 * t;
+      var op = 1 - 0.55 * t;
+      el.style.transform = 'scale(' + sx.toFixed(3) + ', ' + sy.toFixed(3) + ')';
+      el.style.opacity = op.toFixed(3);
+    }
+  }
+
+  function scheduleMemberEffect() {
+    if (memberEffectPending) return;
+    memberEffectPending = true;
+    window.requestAnimationFrame(function () {
+      memberEffectPending = false;
+      updateMemberEffect();
+    });
+  }
+
+  if (memberList) {
+    window.addEventListener('scroll', scheduleMemberEffect, { passive: true });
+    window.addEventListener('resize', scheduleMemberEffect, { passive: true });
+  }
+
+  renderMembers();
+
   /* ---------- Submit form ---------- */
   var form = document.getElementById('submit-form');
   if (form) {
@@ -159,10 +258,153 @@
     });
   }
 
+  /* ---------- Command terminal (home page) ----------
+     A tiny shell in the hero. "register" walks through the same questions
+     as the register form and adds the member; other commands jump around
+     the page or open the submit form. */
+  var termInput = document.getElementById('term-input');
+  if (termInput) {
+    var termOut = document.getElementById('term-out');
+    var termState = { step: 'idle', data: {} };
+    var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    function termPrint(text, cls) {
+      var line = document.createElement('div');
+      line.className = 'term-line' + (cls ? ' ' + cls : '');
+      line.textContent = text;
+      termOut.appendChild(line);
+      termOut.scrollTop = termOut.scrollHeight;
+    }
+
+    function termEcho(cmd) {
+      termPrint('$ ' + cmd, 'term-echo');
+    }
+
+    function termSetPlaceholder(text) {
+      termInput.placeholder = text;
+    }
+
+    function resetFlow() {
+      termState = { step: 'idle', data: {} };
+      termSetPlaceholder('type "help" for commands');
+    }
+
+    function handleRegisterAnswer(value) {
+      if (value.toLowerCase() === 'cancel') {
+        termPrint('cancelled.', 'term-muted');
+        resetFlow();
+        return;
+      }
+      if (termState.step === 'name') {
+        if (!value) {
+          termPrint('please enter your name.', 'term-muted');
+          termSetPlaceholder('your name');
+          return;
+        }
+        termState.data.name = value;
+        termState.step = 'email';
+        termSetPlaceholder('email (optional — enter to skip)');
+      } else if (termState.step === 'email') {
+        if (value && !EMAIL_RE.test(value)) {
+          termPrint('that does not look like an email — try again, or press enter to skip.', 'term-muted');
+          termSetPlaceholder('email (optional — enter to skip)');
+          return;
+        }
+        termState.data.email = value;
+        termState.step = 'make';
+        termSetPlaceholder('what would you like to make? (optional — enter to skip)');
+      } else if (termState.step === 'make') {
+        termState.data.make = value;
+        termState.step = 'confirm';
+        termPrint('name: ' + termState.data.name +
+          (termState.data.email ? ' · email: ' + termState.data.email : ''), 'term-muted');
+        termSetPlaceholder("type 'confirm' to join, or 'cancel'");
+      } else if (termState.step === 'confirm') {
+        if (value.toLowerCase() !== 'confirm') {
+          termPrint("type 'confirm' to join, or 'cancel'.", 'term-muted');
+          return;
+        }
+        var members = readMembers();
+        members.push({
+          name: termState.data.name,
+          email: termState.data.email || '',
+          make: termState.data.make || '',
+          date: new Date().toISOString()
+        });
+        writeMembers(members);
+        renderMembers();
+        termPrint('welcome to the club, ' + termState.data.name +
+          '. see you saturday — you are now in the members section.', 'term-success');
+        resetFlow();
+      }
+    }
+
+    function runCommand(raw) {
+      var cmd = raw.trim();
+      if (termState.step !== 'idle') {
+        handleRegisterAnswer(cmd);
+        return;
+      }
+      var low = cmd.toLowerCase();
+      if (low === 'help') {
+        termPrint('commands:');
+        termPrint('  register — join the club from right here');
+        termPrint('  submit showcase — share a project');
+        termPrint('  showcase — jump to the showcase');
+        termPrint('  members — jump to the members list');
+        termPrint('  clear — clear this terminal');
+      } else if (low === 'register' || low === 'join') {
+        termState.step = 'name';
+        termPrint('registration — answer a few questions. (type cancel anytime)', 'term-muted');
+        termSetPlaceholder('your name');
+      } else if (low === 'submit' || low === 'submit showcase' || low === 'showcase submit') {
+        termPrint('opening the submit page...', 'term-muted');
+        window.location.href = 'submit.html';
+      } else if (low === 'showcase') {
+        termPrint('jumping to the showcase...', 'term-muted');
+        document.getElementById('showcase').scrollIntoView({ behavior: 'smooth' });
+      } else if (low === 'members') {
+        termPrint('jumping to members...', 'term-muted');
+        document.getElementById('members').scrollIntoView({ behavior: 'smooth' });
+      } else if (low === 'clear') {
+        termOut.innerHTML = '';
+      } else if (cmd !== '') {
+        termPrint('command not found: ' + cmd + ' — type "help"', 'term-muted');
+      }
+    }
+
+    termInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        var value = termInput.value;
+        termEcho(value.trim());
+        runCommand(value);
+        termInput.value = '';
+      } else if (e.key === 'Escape' && termState.step !== 'idle') {
+        termPrint('cancelled.', 'term-muted');
+        resetFlow();
+      }
+    });
+
+    var examples = document.querySelectorAll('.term-example');
+    for (var m = 0; m < examples.length; m++) {
+      examples[m].addEventListener('click', function () {
+        if (termState.step !== 'idle') {
+          termInput.focus();
+          return;
+        }
+        var value = this.textContent.trim();
+        termEcho(value);
+        termInput.focus();
+        runCommand(value);
+      });
+    }
+  }
+
   /* ---------- Scroll-reveal animations ----------
-     Elements with class "reveal" fade up as they enter the viewport.
-     The anim-on class (set by the inline head script) hides them
-     before JS runs only when animations are supported and wanted. */
+     Elements with class "reveal" fade up (with a small spring) as they
+     enter the viewport. The anim-on class (set by the inline head script)
+     hides them before JS runs only when animations are supported. */
   if (document.documentElement.classList.contains('anim-on') && 'IntersectionObserver' in window) {
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
@@ -176,7 +418,7 @@
     var revealEls = document.querySelectorAll('.reveal');
     for (var k = 0; k < revealEls.length; k++) io.observe(revealEls[k]);
 
-    /* Safety net: when a snap fling jumps clean over a section in a single
+    /* Safety net: when a fling jumps clean over a section in a single
        frame, IntersectionObserver never sees it. Reveal anything that ends
        up fully above the viewport. */
     var unrevealed = Array.prototype.filter.call(revealEls, function (el) {
