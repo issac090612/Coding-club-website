@@ -1,2 +1,6 @@
 # IDE-generated share/preview artifacts
 .trae-html-share-packages/
+
+# Local Cloudflare Worker state and secrets
+.wrangler/
+.dev.vars

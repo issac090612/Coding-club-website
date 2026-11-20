@@ -1,0 +1,8 @@
+name = "coding-club-api"
+main = "worker.js"
+compatibility_date = "2026-11-20"
+workers_dev = true
+
+[vars]
+JSONBIN_BIN_ID = "REPLACE_WITH_YOUR_JSONBIN_BIN_ID"
+ALLOWED_ORIGINS = "https://issac090612.github.io,http://localhost:8412,http://127.0.0.1:8412"

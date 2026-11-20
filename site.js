@@ -1,6 +1,5 @@
 /* Coding Club — shared behavior: footer year, meeting time in the visitor's
-   device time zone, the showcase and members lists (saved in the browser's
-   local storage — this static site has no server), the home-page command
+   device time zone, remote showcase and members lists, the home-page command
    terminal, and scroll-reveal animations. */
 
 (function () {
@@ -44,41 +43,37 @@
     }
   }
 
-  /* ---------- Showcase (local storage) ---------- */
-  var STORE_KEY = 'showcases';
-
-  function readShowcases() {
-    try {
-      var raw = JSON.parse(localStorage.getItem(STORE_KEY));
-      return Array.isArray(raw) ? raw : [];
-    } catch (e) {
-      return [];
-    }
+  /* ---------- Remote data ----------
+     The Worker keeps the JSONBin key private. User data is never stored in
+     local storage; only the theme preference remains on this device. */
+  function showLoadError(empty, subject) {
+    if (!empty) return;
+    empty.hidden = false;
+    var heading = empty.querySelector('h3');
+    var message = empty.querySelector('p');
+    var link = empty.querySelector('a');
+    if (heading) heading.textContent = 'Could not load the ' + subject + '.';
+    if (message) message.textContent = 'Please check your connection and try again later.';
+    if (link) link.hidden = true;
   }
 
-  function writeShowcases(items) {
-    try {
-      localStorage.setItem(STORE_KEY, JSON.stringify(items));
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
+  /* ---------- Showcase (JSONBin via the Worker) ---------- */
   var grid = document.getElementById('showcase-grid');
-  if (grid) {
-    var emptyEl = document.getElementById('showcase-empty');
-    var items = readShowcases();
-    emptyEl.hidden = items.length > 0;
+  var emptyEl = document.getElementById('showcase-empty');
+
+  function renderShowcases(items) {
+    if (!grid) return;
+    grid.innerHTML = '';
+    if (emptyEl) emptyEl.hidden = items.length > 0;
 
     var dateFmt2 = null;
     try {
       dateFmt2 = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
     } catch (e) {}
 
-    items.forEach(function (item, index) {
+    items.forEach(function (item) {
       var card = document.createElement('article');
-      card.className = 'showcase-card reveal' + (index % 3 ? ' rd' + (index % 3) : '');
+      card.className = 'showcase-card';
 
       var title = document.createElement('h3');
       title.textContent = item.title || 'Untitled project';
@@ -113,34 +108,26 @@
     });
   }
 
-  /* ---------- Members (local storage) ---------- */
-  var MEMBERS_KEY = 'members';
-
-  function readMembers() {
-    try {
-      var raw = JSON.parse(localStorage.getItem(MEMBERS_KEY));
-      return Array.isArray(raw) ? raw : [];
-    } catch (e) {
-      return [];
-    }
+  function loadShowcases() {
+    if (!grid) return Promise.resolve();
+    if (emptyEl) emptyEl.hidden = true;
+    return window.ClubAPI.get('/api/showcases').then(function (payload) {
+      renderShowcases(Array.isArray(payload.showcases) ? payload.showcases : []);
+    }).catch(function () {
+      grid.innerHTML = '';
+      showLoadError(emptyEl, 'showcase');
+    });
   }
 
-  function writeMembers(list) {
-    try {
-      localStorage.setItem(MEMBERS_KEY, JSON.stringify(list));
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
+  loadShowcases();
 
+  /* ---------- Members (JSONBin via the Worker) ---------- */
   var memberList = document.getElementById('member-list');
+  var memberEmpty = document.getElementById('member-empty');
 
-  function renderMembers() {
+  function renderMembers(members) {
     if (!memberList) return;
-    var members = readMembers();
     memberList.innerHTML = '';
-    var memberEmpty = document.getElementById('member-empty');
     if (memberEmpty) memberEmpty.hidden = members.length > 0;
 
     var dateFmtM = null;
@@ -168,6 +155,18 @@
 
     updateMemberLayout();
     updateMemberEffect();
+  }
+
+  function loadMembers() {
+    if (!memberList) return Promise.resolve();
+    if (memberEmpty) memberEmpty.hidden = true;
+    return window.ClubAPI.get('/api/members').then(function (payload) {
+      renderMembers(Array.isArray(payload.members) ? payload.members : []);
+    }).catch(function () {
+      memberList.innerHTML = '';
+      updateMemberLayout();
+      showLoadError(memberEmpty, 'members');
+    });
   }
 
   /* ---------- Circular smartwatch-style member list ----------
@@ -236,13 +235,13 @@
     window.addEventListener('resize', scheduleMemberEffect, { passive: true });
   }
 
-  renderMembers();
+  loadMembers();
 
   /* ---------- Submit form ---------- */
   var form = document.getElementById('submit-form');
   if (form) {
     var status = document.getElementById('submit-status');
-    form.addEventListener('submit', function (e) {
+    form.addEventListener('submit', async function (e) {
       e.preventDefault();
       var title = document.getElementById('sc-title').value.trim();
       var name = document.getElementById('sc-name').value.trim();
@@ -260,28 +259,30 @@
         return;
       }
 
-      var items = readShowcases();
-      items.unshift({
-        title: title,
-        name: name,
-        description: desc,
-        link: link || null,
-        date: new Date().toISOString()
-      });
-
-      if (!writeShowcases(items)) {
-        status.textContent = 'Could not save — your browser is blocking local storage.';
+      var button = form.querySelector('button[type="submit"]');
+      button.disabled = true;
+      status.textContent = 'Saving your showcase...';
+      status.className = 'status';
+      try {
+        await window.ClubAPI.post('/api/showcases', {
+          title: title,
+          name: name,
+          description: desc,
+          link: link || null
+        });
+        form.reset();
+        status.textContent = 'Thanks — your showcase is on the home page now. ';
+        var view = document.createElement('a');
+        view.href = 'index.html#showcase';
+        view.textContent = 'See the showcase';
+        status.appendChild(view);
+        status.className = 'status success';
+      } catch (error) {
+        status.textContent = error.message || 'Could not save your showcase. Please try again.';
         status.className = 'status error';
-        return;
+      } finally {
+        button.disabled = false;
       }
-
-      form.reset();
-      status.textContent = 'Thanks — your showcase is on the home page now. ';
-      var view = document.createElement('a');
-      view.href = 'index.html#showcase';
-      view.textContent = 'See the showcase';
-      status.appendChild(view);
-      status.className = 'status success';
     });
   }
 
@@ -316,7 +317,7 @@
       termSetPlaceholder('type "help" for commands');
     }
 
-    function handleRegisterAnswer(value) {
+    async function handleRegisterAnswer(value) {
       if (value.toLowerCase() === 'cancel') {
         termPrint('cancelled.', 'term-muted');
         resetFlow();
@@ -351,18 +352,26 @@
           termPrint("type 'confirm' to join, or 'cancel'.", 'term-muted');
           return;
         }
-        var members = readMembers();
-        members.push({
-          name: termState.data.name,
-          email: termState.data.email || '',
-          make: termState.data.make || '',
-          date: new Date().toISOString()
-        });
-        writeMembers(members);
-        renderMembers();
-        termPrint('welcome to the club, ' + termState.data.name +
-          '. see you saturday — you are now in the members section.', 'term-success');
-        resetFlow();
+        var name = termState.data.name;
+        termState.step = 'saving';
+        termInput.disabled = true;
+        termPrint('saving your registration...', 'term-muted');
+        try {
+          await window.ClubAPI.post('/api/members', {
+            name: name,
+            email: termState.data.email || '',
+            make: termState.data.make || ''
+          });
+          termPrint('welcome to the club, ' + name +
+            '. see you saturday — you are now in the members section.', 'term-success');
+          await loadMembers();
+        } catch (error) {
+          termPrint('could not register: ' + (error.message || 'please try again.'), 'term-muted');
+        } finally {
+          termInput.disabled = false;
+          resetFlow();
+          termInput.focus();
+        }
       }
     }
 
@@ -434,12 +443,7 @@
       } else if (low === 'date') {
         termPrint(meetingText());
       } else if (low === 'whoami') {
-        var members = readMembers();
-        if (members.length) {
-          termPrint(members[members.length - 1].name);
-        } else {
-          termPrint("guest — type 'join' to become a member", 'term-muted');
-        }
+        termPrint("guest — this terminal does not sign you in; type 'cd members' to view the member list", 'term-muted');
       } else if (low === 'showcase' || low === 'members' || low === 'home') {
         goSection(low);
       } else if (low === 'clear') {

@@ -18,6 +18,7 @@
   </script>
   <link rel="stylesheet" href="style.css">
   <script src="theme.js" defer></script>
+  <script src="api.js" defer></script>
   <script src="site.js" defer></script>
 </head>
 <body>
@@ -73,7 +74,7 @@
       <p id="reg-status" class="status" role="status" aria-live="polite"></p>
       <button type="submit" class="btn btn-primary btn-block">Register</button>
 
-      <p class="form-note">Registrations are saved in your browser and appear in the members section on the home page for this device. To collect registrations from everyone, connect a form backend once the site is hosted.</p>
+      <p class="form-note">Registrations are stored in the club's private JSONBin database. Your name and join date are public; your email and project interests are not displayed on the website.</p>
     </form>
   </main>
 
@@ -85,8 +86,9 @@
   </footer>
 
   <script>
-    document.getElementById('register-form').addEventListener('submit', function (e) {
+    document.getElementById('register-form').addEventListener('submit', async function (e) {
       e.preventDefault();
+      var form = this;
       var status = document.getElementById('reg-status');
       var name = document.getElementById('reg-name');
       var email = document.getElementById('reg-email');
@@ -102,21 +104,26 @@
         status.className = 'status error';
         return;
       }
-      var members = [];
+
+      var button = form.querySelector('button[type="submit"]');
+      button.disabled = true;
+      status.textContent = 'Saving your registration...';
+      status.className = 'status';
       try {
-        var raw = JSON.parse(localStorage.getItem('members'));
-        if (Array.isArray(raw)) members = raw;
-      } catch (err) {}
-      members.push({
-        name: name.value.trim(),
-        email: email.value.trim(),
-        make: make.value.trim(),
-        date: new Date().toISOString()
-      });
-      try { localStorage.setItem('members', JSON.stringify(members)); } catch (err) {}
-      status.textContent = 'Thanks for registering. See you Saturday — you are now in the members section on the home page.';
-      status.className = 'status success';
-      this.reset();
+        await window.ClubAPI.post('/api/members', {
+          name: name.value.trim(),
+          email: email.value.trim(),
+          make: make.value.trim()
+        });
+        status.textContent = 'Thanks for registering. See you Saturday — you are now in the members section on the home page.';
+        status.className = 'status success';
+        form.reset();
+      } catch (error) {
+        status.textContent = error.message || 'Could not save your registration. Please try again.';
+        status.className = 'status error';
+      } finally {
+        button.disabled = false;
+      }
     });
   </script>
 </body>
