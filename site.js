@@ -339,37 +339,86 @@
       }
     }
 
+    function meetingText() {
+      try {
+        var start = nextMeetingUTC();
+        var end = new Date(start.getTime() + 30 * 60 * 1000);
+        var dateFmtT = new Intl.DateTimeFormat(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+        var timeFmtT = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' });
+        var tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'local';
+        return 'next meeting: ' + dateFmtT.format(start) + ' · ' +
+          timeFmtT.format(start) + ' – ' + timeFmtT.format(end) +
+          ' · ' + tz + ' time';
+      } catch (e) {
+        return 'next meeting: Saturdays · 7:30–8:00 AM · UTC+8';
+      }
+    }
+
+    function goSection(name) {
+      if (name === 'home' || name === '~' || name === '/') {
+        termPrint('moving to home...', 'term-muted');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+      var target = document.getElementById(name);
+      if (!target) {
+        termPrint('cd: no such directory: ' + name, 'term-muted');
+        return;
+      }
+      termPrint('moving to ' + name + '...', 'term-muted');
+      target.scrollIntoView({ behavior: 'smooth' });
+    }
+
     function runCommand(raw) {
       var cmd = raw.trim();
       if (termState.step !== 'idle') {
         handleRegisterAnswer(cmd);
         return;
       }
-      var low = cmd.toLowerCase();
+      var parts = cmd.split(/\s+/);
+      var low = parts[0].toLowerCase();
+      var arg = parts.slice(1).join(' ').toLowerCase();
+
       if (low === 'help') {
         termPrint('commands:');
-        termPrint('  register — join the club from right here');
-        termPrint('  submit showcase — share a project');
-        termPrint('  showcase — jump to the showcase');
-        termPrint('  members — jump to the members list');
-        termPrint('  clear — clear this terminal');
-      } else if (low === 'register' || low === 'join') {
+        termPrint('  join            become a member');
+        termPrint('  new showcase    share a project');
+        termPrint('  ls              list sections');
+        termPrint('  cd <section>    go to a section');
+        termPrint('  date            next meeting time');
+        termPrint('  whoami          who you are');
+        termPrint('  clear           clear the terminal');
+      } else if (low === 'join' || low === 'register') {
         termState.step = 'name';
         termPrint('registration — answer a few questions. (type cancel anytime)', 'term-muted');
         termSetPlaceholder('your name');
-      } else if (low === 'submit' || low === 'submit showcase' || low === 'showcase submit') {
+      } else if (low === 'new' || low === 'submit') {
+        /* new [showcase] — open the submit page */
         termPrint('opening the submit page...', 'term-muted');
         window.location.href = 'submit.html';
-      } else if (low === 'showcase') {
-        termPrint('jumping to the showcase...', 'term-muted');
-        document.getElementById('showcase').scrollIntoView({ behavior: 'smooth' });
-      } else if (low === 'members') {
-        termPrint('jumping to members...', 'term-muted');
-        document.getElementById('members').scrollIntoView({ behavior: 'smooth' });
+      } else if (low === 'ls') {
+        termPrint('home/  showcase/  members/  meetings/');
+      } else if (low === 'cd') {
+        if (!arg) {
+          termPrint('cd: missing operand', 'term-muted');
+        } else {
+          goSection(arg.replace(/\/+$/, ''));
+        }
+      } else if (low === 'date') {
+        termPrint(meetingText());
+      } else if (low === 'whoami') {
+        var members = readMembers();
+        if (members.length) {
+          termPrint(members[members.length - 1].name);
+        } else {
+          termPrint("guest — type 'join' to become a member", 'term-muted');
+        }
+      } else if (low === 'showcase' || low === 'members' || low === 'home') {
+        goSection(low);
       } else if (low === 'clear') {
         termOut.innerHTML = '';
       } else if (cmd !== '') {
-        termPrint('command not found: ' + cmd + ' — type "help"', 'term-muted');
+        termPrint("command not found: " + parts[0] + " — try 'help'", 'term-muted');
       }
     }
 
