@@ -1,5 +1,6 @@
 /* ============================================================
-   Coding Club — Apple-inspired stylesheet
+   Coding Club — stylesheet
+   Full-screen snap sections, one solid color each, centered text.
    Follows the system theme by default; the nav toggle forces
    dark or light and remembers the choice (see theme.js).
    ============================================================ */
@@ -7,7 +8,7 @@
 /* ---------- Light theme (default) ---------- */
 :root {
   --bg: #ffffff;
-  --bg-alt: #f5f5f7;
+  --bg-alt: #f0f0f3;
   --text: #1d1d1f;
   --muted: #6e6e73;
   --link: #0071e3;
@@ -15,8 +16,6 @@
   --btn-hover: #0077ed;
   --btn-text: #ffffff;
   --card: #f5f5f7;
-  --panel: #ffffff;
-  --panel-border: transparent;
   --nav-bg: rgba(255, 255, 255, 0.72);
   --nav-border: rgba(0, 0, 0, 0.1);
   --hairline: #d2d2d7;
@@ -42,8 +41,6 @@
     --btn-hover: #0077ed;
     --btn-text: #ffffff;
     --card: #1d1d1f;
-    --panel: #000000;
-    --panel-border: rgba(255, 255, 255, 0.1);
     --nav-bg: rgba(22, 22, 23, 0.72);
     --nav-border: rgba(255, 255, 255, 0.12);
     --hairline: #424245;
@@ -69,8 +66,6 @@
   --btn-hover: #0077ed;
   --btn-text: #ffffff;
   --card: #1d1d1f;
-  --panel: #000000;
-  --panel-border: rgba(255, 255, 255, 0.1);
   --nav-bg: rgba(22, 22, 23, 0.72);
   --nav-border: rgba(255, 255, 255, 0.12);
   --hairline: #424245;
@@ -87,7 +82,7 @@
 /* ---------- Forced light theme (toggle) ---------- */
 :root[data-theme="light"] {
   --bg: #ffffff;
-  --bg-alt: #f5f5f7;
+  --bg-alt: #f0f0f3;
   --text: #1d1d1f;
   --muted: #6e6e73;
   --link: #0071e3;
@@ -95,8 +90,6 @@
   --btn-hover: #0077ed;
   --btn-text: #ffffff;
   --card: #f5f5f7;
-  --panel: #ffffff;
-  --panel-border: transparent;
   --nav-bg: rgba(255, 255, 255, 0.72);
   --nav-border: rgba(0, 0, 0, 0.1);
   --hairline: #d2d2d7;
@@ -114,9 +107,10 @@
 * { box-sizing: border-box; }
 
 html { scroll-behavior: smooth; }
-@media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-}
+
+/* Full-screen snap scrolling, enabled only on pages with .screen sections
+   (site.js adds the "snap" class). */
+html.snap { scroll-snap-type: y mandatory; }
 
 body {
   margin: 0;
@@ -187,6 +181,10 @@ h1, h2, h3 { letter-spacing: -0.02em; line-height: 1.1; }
 
 .btn-primary { background: var(--btn-bg); color: var(--btn-text); }
 .btn-primary:hover { background: var(--btn-hover); }
+
+.btn-invert { background: #ffffff; color: var(--btn-bg); }
+.btn-invert:hover { background: rgba(255, 255, 255, 0.9); }
+
 .btn-hero { font-size: 17px; padding: 0.8rem 1.75rem; }
 .btn-block { display: flex; width: 100%; justify-content: center; font-size: 17px; padding: 0.85rem 1.75rem; }
 
@@ -199,23 +197,62 @@ h1, h2, h3 { letter-spacing: -0.02em; line-height: 1.1; }
 
 .cta-link:hover { text-decoration: underline; }
 
-/* ---------- Hero ---------- */
-.hero { text-align: center; padding-top: 5.5rem; padding-bottom: 4.5rem; }
+/* ---------- Full-screen snap sections ---------- */
+.screen {
+  min-height: 100vh;
+  min-height: 100svh;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 6rem 22px;
+}
 
-.eyebrow { margin: 0; font-size: 21px; font-weight: 600; color: var(--muted); }
+/* Auto margins center each section's content; they collapse to zero when a
+   section's content is taller than the viewport, so the top stays reachable. */
+.screen > :first-child { margin-top: auto; }
+.screen > :last-child { margin-bottom: auto; }
+
+.screen h2 { margin: 0 0 1rem; }
+
+.screen-alt { background: var(--bg-alt); }
+
+.screen-band { background: var(--band-bg); color: var(--band-text); }
+.screen-band h2 {
+  font-size: clamp(2.75rem, 9vw, 5.5rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+
+.screen-accent { background: var(--btn-bg); color: #ffffff; }
+.screen-accent .mono-label { color: rgba(255, 255, 255, 0.72); }
+.screen-accent h2 { color: #ffffff; }
+.screen-accent .lead { color: rgba(255, 255, 255, 0.88); margin: 0 0 2rem; }
+
+.mono-label {
+  font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 1rem;
+  color: var(--muted);
+  margin: 0 0 1.5rem;
+}
+
+/* ---------- Hero ---------- */
+.eyebrow { margin: 0 0 0.5rem; font-size: 21px; font-weight: 600; color: var(--muted); }
 
 .hero h1 {
   font-size: clamp(2.6rem, 7vw, 4.25rem);
   font-weight: 700;
   letter-spacing: -0.03em;
-  margin: 0.35em 0 0.3em;
+  margin: 0 0 0.4rem;
 }
 
 .hero .sub {
   font-size: clamp(1.05rem, 2.4vw, 1.3rem);
   color: var(--muted);
   max-width: 40rem;
-  margin: 0 auto 1.9rem;
+  margin: 0 0 1.9rem;
 }
 
 .hero-ctas {
@@ -226,47 +263,22 @@ h1, h2, h3 { letter-spacing: -0.02em; line-height: 1.1; }
   flex-wrap: wrap;
 }
 
-/* ---------- Bands and sections ---------- */
-.band { background: var(--bg-alt); }
-.section { padding-top: 5rem; padding-bottom: 4.75rem; }
-
-.tiles {
+/* ---------- What we do (two text columns) ---------- */
+.duo {
+  width: 100%;
+  max-width: 60rem;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
-  gap: 20px;
-  padding-top: 5rem;
-  padding-bottom: 4.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 3rem 5rem;
 }
 
-.tile {
-  background: var(--panel);
-  border: 1px solid var(--panel-border);
-  border-radius: 28px;
-  padding: 3rem 2.6rem 2.9rem;
-  box-shadow: var(--shadow);
-}
-
-.tile h3 { font-size: clamp(1.5rem, 3vw, 1.9rem); margin: 0 0 0.6rem; }
-.tile p { color: var(--muted); font-size: 1.05rem; margin: 0; }
-
-/* ---------- Statement band (inverted) ---------- */
-.statement {
-  background: var(--band-bg);
-  color: var(--band-text);
-  text-align: center;
-  padding-top: 6rem;
-  padding-bottom: 6rem;
-}
-
-.statement h2 {
-  font-size: clamp(2.6rem, 8vw, 5rem);
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  margin: 0;
-}
+.duo h3 { font-size: clamp(1.5rem, 3vw, 1.9rem); margin: 0 0 0.6rem; }
+.duo p { color: var(--muted); font-size: 1.05rem; margin: 0; }
 
 /* ---------- Showcase ---------- */
 .section-head {
+  width: 100%;
+  max-width: 980px;
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -278,6 +290,8 @@ h1, h2, h3 { letter-spacing: -0.02em; line-height: 1.1; }
 .section-head h2 { font-size: clamp(1.9rem, 4.5vw, 2.6rem); font-weight: 700; margin: 0; }
 
 .showcase-grid {
+  width: 100%;
+  max-width: 980px;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
   gap: 20px;
@@ -287,7 +301,7 @@ h1, h2, h3 { letter-spacing: -0.02em; line-height: 1.1; }
 
 .showcase-card {
   background: var(--card);
-  border-radius: 28px;
+  border-radius: 24px;
   padding: 1.9rem;
   display: flex;
   flex-direction: column;
@@ -302,46 +316,18 @@ h1, h2, h3 { letter-spacing: -0.02em; line-height: 1.1; }
 .card-link { color: var(--link); text-decoration: none; font-size: 0.98rem; align-self: flex-start; }
 .card-link:hover { text-decoration: underline; }
 
-.empty { text-align: center; padding-top: 3.5rem; padding-bottom: 2rem; }
+.empty { padding: 1.5rem 0; }
 .empty h3 { font-size: 1.45rem; margin: 0 0 0.5rem; }
 .empty p { color: var(--muted); margin: 0 0 1.25rem; }
 
 /* ---------- Meetings ---------- */
-.meetings { text-align: center; padding-top: 5rem; padding-bottom: 4.75rem; }
-
-.meetings h2 { font-size: clamp(1.9rem, 4.5vw, 2.6rem); font-weight: 700; margin: 0 0 1rem; }
-
-.rule { font-size: clamp(1.15rem, 2.6vw, 1.5rem); font-weight: 600; margin: 0 0 2rem; }
-
-.next-panel {
-  display: inline-block;
-  text-align: center;
-  background: var(--panel);
-  border: 1px solid var(--panel-border);
-  border-radius: 22px;
-  box-shadow: var(--shadow);
-  padding: 1.5rem 2.4rem;
-}
-
-.next-label {
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--muted);
-  margin: 0 0 0.35rem;
-}
-
-.next-time { font-size: clamp(1.1rem, 2.6vw, 1.45rem); font-weight: 600; margin: 0; }
-
-.note { color: var(--muted); font-size: 0.85rem; margin: 1.5rem 0 0; }
-
-/* ---------- Register CTA ---------- */
-.cta { text-align: center; }
-.cta h2 { font-size: clamp(2rem, 5vw, 2.9rem); font-weight: 700; margin: 0 0 0.75rem; }
-.cta p { color: var(--muted); font-size: 1.1rem; margin: 0 0 1.9rem; }
+.rule { font-size: clamp(1.3rem, 3.2vw, 1.9rem); font-weight: 700; margin: 0 0 1.5rem; }
+.next-time { font-size: clamp(1.1rem, 2.8vw, 1.45rem); font-weight: 600; margin: 0 0 1rem; }
+.note { color: var(--muted); font-size: 0.85rem; margin: 0; }
 
 /* ---------- Footer ---------- */
 footer { border-top: 1px solid var(--hairline); }
+html.snap footer { scroll-snap-align: end; }
 
 .foot-inner {
   display: flex;
@@ -357,7 +343,21 @@ footer { border-top: 1px solid var(--hairline); }
 .foot-inner p { margin: 0; }
 
 /* ---------- Forms ---------- */
-.auth-wrap { max-width: 30rem; margin: 0 auto; padding-top: 4.5rem; padding-bottom: 5rem; }
+.auth-wrap {
+  max-width: 30rem;
+  margin: 0 auto;
+  min-height: calc(100vh - 120px);
+  min-height: calc(100svh - 120px);
+  display: flex;
+  flex-direction: column;
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+}
+
+/* Auto margins center the block when it fits; they collapse to zero
+   (top-aligned, fully reachable) when the form is taller than the viewport. */
+.auth-wrap > :first-child { margin-top: auto; }
+.auth-wrap > :last-child { margin-bottom: auto; }
 
 .auth-wrap h1 {
   font-size: clamp(2rem, 5vw, 2.8rem);
@@ -469,6 +469,8 @@ html.anim-on .rd2 { transition-delay: 0.16s; }
 html.anim-on .rd3 { transition-delay: 0.24s; }
 
 @media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  html.snap { scroll-snap-type: none; }
   html.anim-on .reveal {
     opacity: 1;
     transform: none;
@@ -481,9 +483,7 @@ html.anim-on .rd3 { transition-delay: 0.24s; }
   .nav-links a:not(.btn) { display: none; }
   .nav-inner { overflow-x: visible; gap: 1rem; }
   .nav-links { gap: 0.9rem; }
-  .hero { padding-top: 3.5rem; padding-bottom: 3rem; }
+  .screen { padding-top: 4.5rem; padding-bottom: 4.5rem; }
   .hero-ctas { gap: 1.25rem; }
-  .section, .tiles, .meetings { padding-top: 3.25rem; padding-bottom: 3.25rem; }
-  .statement { padding-top: 4rem; padding-bottom: 4rem; }
   .form-card { padding: 1.9rem 1.4rem; }
 }

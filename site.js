@@ -5,6 +5,11 @@
 (function () {
   'use strict';
 
+  /* ---------- Full-screen snap scrolling (home page only) ---------- */
+  if (document.querySelector('main .screen')) {
+    document.documentElement.classList.add('snap');
+  }
+
   /* ---------- Footer year ---------- */
   var yearEl = document.getElementById('year');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
@@ -170,5 +175,31 @@
 
     var revealEls = document.querySelectorAll('.reveal');
     for (var k = 0; k < revealEls.length; k++) io.observe(revealEls[k]);
+
+    /* Safety net: when a snap fling jumps clean over a section in a single
+       frame, IntersectionObserver never sees it. Reveal anything that ends
+       up fully above the viewport. */
+    var unrevealed = Array.prototype.filter.call(revealEls, function (el) {
+      return !el.classList.contains('is-visible');
+    });
+
+    function checkPassed() {
+      if (!unrevealed.length) {
+        window.removeEventListener('scroll', checkPassed);
+        return;
+      }
+      unrevealed = unrevealed.filter(function (el) {
+        if (el.classList.contains('is-visible')) return false;
+        if (el.getBoundingClientRect().bottom <= 0) {
+          el.classList.add('is-visible');
+          io.unobserve(el);
+          return false;
+        }
+        return true;
+      });
+    }
+
+    window.addEventListener('scroll', checkPassed, { passive: true });
+    checkPassed();
   }
 })();
