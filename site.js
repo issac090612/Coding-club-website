@@ -166,37 +166,59 @@
       memberList.appendChild(item);
     });
 
+    updateMemberLayout();
     updateMemberEffect();
   }
 
-  /* ---------- Smartwatch-style member list ----------
-     Like an app list on a round smartwatch: rows are thin near the top and
-     bottom of the viewport and reach full size at the center. Recomputed on
-     scroll/resize via requestAnimationFrame. */
+  /* ---------- Circular smartwatch-style member list ----------
+     Page scrolling rotates the members around a vertical arc. The section's
+     extra height gives the list one full circuit, then normal page scrolling
+     resumes. Positions wrap modulo the member count, so the last member is
+     followed by the first. */
   var memberEffectPending = false;
+  var membersSection = document.getElementById('members');
+
+  function updateMemberLayout() {
+    if (!membersSection || !memberList) return;
+    var count = memberList.children.length;
+    var extra = count > 4 ? count * 110 : 0;
+    membersSection.style.setProperty('--members-scroll', extra + 'px');
+  }
 
   function updateMemberEffect() {
     if (!memberList) return;
     var els = memberList.querySelectorAll('.member-item');
-    if (!els.length) return;
-    var vh = window.innerHeight;
+    var count = els.length;
+    if (!count) return;
     var listRect = memberList.getBoundingClientRect();
-    var visibleTop = Math.max(0, listRect.top);
-    var visibleBottom = Math.min(vh, listRect.bottom);
-    if (visibleBottom <= visibleTop) return;
-    var mid = (visibleTop + visibleBottom) / 2;
-    var range = Math.max((visibleBottom - visibleTop) / 2, 1);
-    for (var i = 0; i < els.length; i++) {
+    if (listRect.height <= 0) return;
+
+    var circular = count > 4;
+    var position = 0;
+    if (circular && membersSection) {
+      var sectionTop = membersSection.getBoundingClientRect().top + window.scrollY;
+      var distance = Math.max(membersSection.offsetHeight - window.innerHeight, 1);
+      var progress = Math.min(Math.max((window.scrollY - sectionTop) / distance, 0), 1);
+      position = progress * count;
+    }
+
+    var radius = listRect.height * 0.42;
+    for (var i = 0; i < count; i++) {
       var el = els[i];
-      var r = el.getBoundingClientRect();
-      if (r.bottom < visibleTop - 80 || r.top > visibleBottom + 80) continue;
-      var center = (r.top + r.bottom) / 2;
-      var t = Math.min(Math.abs(center - mid) / range, 1);
-      var sx = 1 - 0.45 * t;
-      var sy = 1 - 0.15 * t;
-      var op = 1 - 0.55 * t;
-      el.style.transform = 'scale(' + sx.toFixed(3) + ', ' + sy.toFixed(3) + ')';
-      el.style.opacity = op.toFixed(3);
+      var centered = circular
+        ? ((i - position + count / 2) % count + count) % count - count / 2
+        : i - (count - 1) / 2;
+      var angle = centered * Math.PI / 6;
+      var depth = Math.max(Math.cos(angle), 0);
+      var visible = Math.abs(centered) < 2.6;
+      var y = Math.sin(angle) * radius;
+      var scale = 0.55 + 0.45 * depth;
+      var opacity = 0.25 + 0.75 * depth;
+
+      el.style.transform = 'translate(-50%, -50%) translateY(' + y.toFixed(2) + 'px) scale(' + scale.toFixed(3) + ')';
+      el.style.opacity = visible ? opacity.toFixed(3) : '0';
+      el.style.visibility = visible ? 'visible' : 'hidden';
+      el.style.zIndex = String(100 - Math.round(Math.abs(centered) * 10));
     }
   }
 
@@ -210,7 +232,6 @@
   }
 
   if (memberList) {
-    memberList.addEventListener('scroll', scheduleMemberEffect, { passive: true });
     window.addEventListener('scroll', scheduleMemberEffect, { passive: true });
     window.addEventListener('resize', scheduleMemberEffect, { passive: true });
   }

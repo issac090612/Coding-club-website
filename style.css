@@ -570,42 +570,56 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--link); outline-
 
 .back-link:hover { text-decoration: underline; }
 
-/* ---------- Members (smartwatch-style list) ----------
-   The section stays one viewport tall. Long lists scroll inside the section;
-   native scroll chaining returns to the page after the final member. */
+/* ---------- Members (circular smartwatch-style list) ----------
+   The sticky stage stays on screen while page scrolling rotates the list.
+   JavaScript sets --members-scroll from the member count; after one full
+   circuit, the runway ends and the next section continues normally. */
 #members {
-  height: 100vh;
-  height: 100svh;
+  position: relative;
+  z-index: 1;
+  height: calc(100vh + var(--members-scroll, 0px));
+  height: calc(100svh + var(--members-scroll, 0px));
+  scroll-snap-align: start;
+  background: var(--bg-alt);
 }
 
-#members > .mono-label,
-#members > h2,
-#members > .empty { flex: none; }
+.members-stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  text-align: center;
+  padding: 6rem 22px;
+  background: var(--bg-alt);
+}
+
+.members-stage > .mono-label,
+.members-stage > h2,
+.members-stage > .empty { flex: none; }
+
+.members-stage h2 { margin: 0 0 1rem; }
 
 .member-list {
-  width: min(26rem, 100%);
-  display: flex;
-  flex: 0 1 auto;
-  flex-direction: column;
-  gap: 0.9rem;
-  min-height: 0;
+  position: relative;
+  width: min(28rem, 100%);
+  height: min(22rem, 52vh);
+  flex: none;
   margin: 1rem 0 0;
-  padding: 0.25rem 0.5rem;
-  overflow-y: auto;
-  overscroll-behavior-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--muted) transparent;
+  overflow: hidden;
 }
 
 .member-list:empty { display: none; }
 
-.member-list:focus-visible {
-  outline: 2px solid var(--link);
-  outline-offset: 4px;
-  border-radius: 18px;
-}
-
 .member-item {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(100% - 1rem);
   background: var(--card);
   border-radius: 18px;
   padding: 1rem 1.6rem;
@@ -655,6 +669,6 @@ html.anim-on .rd3 { transition-delay: 0.24s; }
   .nav-links a:not(.btn) { display: none; }
   .nav-inner { overflow-x: visible; gap: 1rem; }
   .nav-links { gap: 0.9rem; }
-  .screen, .screen-scroll { padding-top: 4.5rem; padding-bottom: 4.5rem; }
+  .screen, .screen-scroll, .members-stage { padding-top: 4.5rem; padding-bottom: 4.5rem; }
   .form-card { padding: 1.9rem 1.4rem; }
 }
