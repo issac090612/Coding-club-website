@@ -11,6 +11,10 @@
       var t = localStorage.getItem('theme');
       if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
     } catch (e) {}
+    /* Enable scroll-reveal animations; site.js reveals elements as they scroll in. */
+    if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.documentElement.classList.add('anim-on');
+    }
   </script>
   <link rel="stylesheet" href="style.css">
   <script src="theme.js" defer></script>
@@ -39,18 +43,18 @@
   </nav>
 
   <main class="auth-wrap container">
-    <h1>Join the Coding Club.</h1>
-    <p class="page-sub">Register below — and come to our next Saturday meeting.</p>
+    <h1 class="reveal">Join the Coding Club.</h1>
+    <p class="page-sub reveal rd1">Register below — and come to our next Saturday meeting.</p>
 
-    <form id="register-form" class="form-card" novalidate>
+    <form id="register-form" class="form-card reveal rd2" novalidate>
       <div class="form-row">
         <label for="reg-name">Full name <span class="required">*</span></label>
         <input type="text" id="reg-name" required autocomplete="name" placeholder="Your name">
       </div>
 
       <div class="form-row">
-        <label for="reg-email">Email <span class="required">*</span></label>
-        <input type="email" id="reg-email" required autocomplete="email" placeholder="you@example.com">
+        <label for="reg-email">Email <span class="muted">(optional)</span></label>
+        <input type="email" id="reg-email" autocomplete="email" placeholder="you@example.com">
       </div>
 
       <div class="form-row">
@@ -81,8 +85,16 @@
     document.getElementById('register-form').addEventListener('submit', function (e) {
       e.preventDefault();
       var status = document.getElementById('reg-status');
-      if (!this.checkValidity()) {
+      var name = document.getElementById('reg-name');
+      var email = document.getElementById('reg-email');
+      var consent = document.getElementById('reg-consent');
+      if (!name.value.trim() || !consent.checked) {
         status.textContent = 'Please fill in the required fields.';
+        status.className = 'status error';
+        return;
+      }
+      if (email.value.trim() && !email.checkValidity()) {
+        status.textContent = 'Please enter a valid email address, or leave it empty.';
         status.className = 'status error';
         return;
       }

@@ -11,6 +11,10 @@
       var t = localStorage.getItem('theme');
       if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
     } catch (e) {}
+    /* Enable scroll-reveal animations; site.js reveals elements as they scroll in. */
+    if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.documentElement.classList.add('anim-on');
+    }
   </script>
   <link rel="stylesheet" href="style.css">
   <script src="theme.js" defer></script>
@@ -39,10 +43,10 @@
   </nav>
 
   <main class="auth-wrap container">
-    <h1>Submit a showcase.</h1>
-    <p class="page-sub">Made something? Share it with the club — it will appear in the showcase on the home page.</p>
+    <h1 class="reveal">Submit a showcase.</h1>
+    <p class="page-sub reveal rd1">Made something? Share it with the club — it will appear in the showcase on the home page.</p>
 
-    <form id="submit-form" class="form-card" novalidate>
+    <form id="submit-form" class="form-card reveal rd2" novalidate>
       <div class="form-row">
         <label for="sc-title">Project title <span class="required">*</span></label>
         <input type="text" id="sc-title" maxlength="80" placeholder="What did you make?">

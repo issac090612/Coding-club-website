@@ -11,6 +11,10 @@
       var t = localStorage.getItem('theme');
       if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
     } catch (e) {}
+    /* Enable scroll-reveal animations; site.js reveals elements as they scroll in. */
+    if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.documentElement.classList.add('anim-on');
+    }
   </script>
   <link rel="stylesheet" href="style.css">
   <script src="theme.js" defer></script>
@@ -39,10 +43,10 @@
   </nav>
 
   <header class="hero container">
-    <p class="eyebrow">The school Coding Club</p>
-    <h1>Make things. Together.</h1>
-    <p class="sub">We work on projects together — and share the things each of us make.</p>
-    <div class="hero-ctas">
+    <p class="eyebrow reveal">The school Coding Club</p>
+    <h1 class="reveal rd1">Make things. Together.</h1>
+    <p class="sub reveal rd2">We work on projects together — and share the things each of us make.</p>
+    <div class="hero-ctas reveal rd3">
       <a href="register.html" class="btn btn-primary btn-hero">Register</a>
       <a href="submit.html" class="cta-link">Submit a showcase<span class="chev" aria-hidden="true"> ›</span></a>
     </div>
@@ -50,11 +54,11 @@
 
   <section class="band">
     <div class="container tiles">
-      <div class="tile">
+      <div class="tile reveal">
         <h3>Work on projects together.</h3>
         <p>Team up with other members to plan, build, and finish projects — from first idea to working result.</p>
       </div>
-      <div class="tile">
+      <div class="tile reveal rd1">
         <h3>Share what you made.</h3>
         <p>Building something on your own? Put it in the showcase and show the club what it does.</p>
       </div>
@@ -63,17 +67,17 @@
 
   <section class="statement">
     <div class="container">
-      <h2>Everyone is welcome.</h2>
+      <h2 class="reveal">Everyone is welcome.</h2>
     </div>
   </section>
 
   <section id="showcase" class="section container">
-    <div class="section-head">
+    <div class="section-head reveal">
       <h2>Showcase.</h2>
       <a href="submit.html" class="cta-link">Submit yours<span class="chev" aria-hidden="true"> ›</span></a>
     </div>
     <div id="showcase-grid" class="showcase-grid"></div>
-    <div id="showcase-empty" class="empty">
+    <div id="showcase-empty" class="empty reveal">
       <h3>Nothing here yet.</h3>
       <p>Projects that members share will show up here.</p>
       <a href="submit.html" class="cta-link">Submit the first one<span class="chev" aria-hidden="true"> ›</span></a>
@@ -82,20 +86,20 @@
 
   <section id="meetings" class="band">
     <div class="container meetings">
-      <h2>We meet every Saturday.</h2>
-      <p class="rule">7:30–8:00 AM · China Standard Time (UTC+8)</p>
-      <div class="next-panel">
+      <h2 class="reveal">We meet every Saturday.</h2>
+      <p class="rule reveal rd1">7:30–8:00 AM · China Standard Time (UTC+8)</p>
+      <div class="next-panel reveal rd2">
         <p class="next-label">Next meeting — your device's time zone</p>
         <p id="meeting-next" class="next-time">Saturdays · 7:30–8:00 AM · UTC+8</p>
       </div>
-      <p class="note">The time above adjusts automatically to wherever you are.</p>
+      <p class="note reveal rd3">The time above adjusts automatically to wherever you are.</p>
     </div>
   </section>
 
   <section class="section container cta">
-    <h2>Join the Coding Club.</h2>
-    <p>Come build something with us.</p>
-    <a href="register.html" class="btn btn-primary btn-hero">Register</a>
+    <h2 class="reveal">Join the Coding Club.</h2>
+    <p class="reveal rd1">Come build something with us.</p>
+    <a href="register.html" class="btn btn-primary btn-hero reveal rd2">Register</a>
   </section>
 
   <footer>
